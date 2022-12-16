@@ -71,7 +71,7 @@ export default class ShadowpagePlugin extends Plugin {
         }
         replacedText = replacedText.replace(block, markdown)
       } catch (e) {
-        console.log(new Notice('Unable to render dataview query. Please update the dataview plugin to the latest version.'))
+        console.log(new Notice('Unable to render dataview query.'))
         console.log(e)
         return queryBlock[0]
       }
