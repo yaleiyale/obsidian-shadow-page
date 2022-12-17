@@ -19,9 +19,9 @@ export class ShadowPageSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('上级路径')
-      .setDesc('D:/vault/')
       .addText((text) => {
         text
+          .setPlaceholder('D:/vault/')
           .setValue(parms.vaultPath)
           .onChange(async (value) => {
             parms.vaultPath = value
@@ -31,9 +31,9 @@ export class ShadowPageSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('当前文件夹')
-      .setDesc('note/')
       .addText((text) => {
         text
+          .setPlaceholder('note/')
           .setValue(parms.notePath)
           .onChange(async (value) => {
             parms.notePath = value
@@ -43,9 +43,9 @@ export class ShadowPageSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('目标文件夹')
-      .setDesc('content/')
       .addText((text) => {
         text
+          .setPlaceholder('content/')
           .setValue(parms.blogPath)
           .onChange(async (value) => {
             parms.blogPath = value

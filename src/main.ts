@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian'
+import { Notice, Plugin } from 'obsidian'
 import { generateAll } from './converter'
 
 import { clearDir, copyNote } from './file-helper'
@@ -14,9 +14,13 @@ export default class ShadowPage extends Plugin {
       id: 'generate-shadow-page',
       name: 'generate shadow page',
       callback: async () => {
-        clearDir(this.config.vaultPath + this.config.blogPath)
-        copyNote(this.config.vaultPath + this.config.notePath, this.config.vaultPath + this.config.blogPath, [])
-        await generateAll(this.app, this.config.blogPath)
+        if (this.config.vaultPath === '' || this.config.notePath === '' || this.config.blogPath === '') {
+          console.log(new Notice('参数未初始化'))
+        } else {
+          clearDir(this.config.vaultPath + this.config.blogPath)
+          copyNote(this.config.vaultPath + this.config.notePath, this.config.vaultPath + this.config.blogPath, [])
+          await generateAll(this.app, this.config.blogPath)
+        }
       },
       hotkeys: []
     })
