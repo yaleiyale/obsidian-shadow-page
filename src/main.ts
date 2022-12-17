@@ -1,14 +1,22 @@
-import { CachedMetadata, Notice, Plugin, TFile } from 'obsidian'
-import { DataviewApi, getAPI } from 'obsidian-dataview'
-export default class ShadowpagePlugin extends Plugin {
-  onload (): void {
+import { Plugin } from 'obsidian'
+import { generateAll } from './converter'
+
+import { clearDir, copyNote } from './file-helper'
+import { ShadowPageSettingTab } from './settings-tab'
+export default class ShadowPage extends Plugin {
+  config!: Config
+  async onload (): Promise<void> {
     console.log('Loading ShadowPage plugin.')
+    await this.loadSettings()
+    this.addSettingTab(new ShadowPageSettingTab(this.app, this))
     // Execute Build
     this.addCommand({
       id: 'generate-shadow-page',
       name: 'generate shadow page',
       callback: async () => {
-        await this.generateAll()
+        clearDir(this.config.vaultPath + this.config.blogPath)
+        copyNote(this.config.vaultPath + this.config.notePath, this.config.vaultPath + this.config.blogPath, [])
+        await generateAll(this.app, this.config.blogPath)
       },
       hotkeys: []
     })
@@ -18,64 +26,25 @@ export default class ShadowpagePlugin extends Plugin {
     console.log('Unloading ShadowPage plugin')
   }
 
-  async generateAll ():Promise<void> {
-    const files = this.app.vault.getMarkdownFiles()
-    for (const file of files) {
-      await this.generateOnePage(file)
-    }
-    console.log(new Notice('shadow done'))
+  // Load settings infromation
+  async loadSettings (): Promise<void> {
+    this.config = Object.assign({}, DEFAULT_CONFIG, await this.loadData())
   }
 
-  async generateOnePage (currentFile: TFile): Promise<any> {
-    // check front matter: shadow:true
-    const metadataCache = this.app.metadataCache
-    const frontMatter = (metadataCache.getCache((currentFile).path) as CachedMetadata).frontmatter
-    if ((frontMatter != null) && frontMatter.shadow === true) {
-      // new text
-      const shadowContent = await this.generateMarkdown(currentFile)
-      // create folder
-      const path = currentFile?.path
-      const folder = path.replace('/' + (currentFile).name, '')
-      if (!await this.app.vault.adapter.exists(folder)) {
-        await this.app.vault.createFolder(folder)
-      }
-      // write file
-      await this.app.vault.adapter.write(path, shadowContent)
-    }
+  // When saving settings
+  async saveSettings (): Promise<void> {
+    await this.saveData(this.config)
   }
+}
 
-  async generateMarkdown (file: TFile): Promise<string> {
-    const vault = this.app.vault
-    let text = await vault.cachedRead(file)
-    text = await this.convertDataViews(text, file.path)
-    return text
-  }
+interface Config {
+  vaultPath: string
+  notePath: string
+  blogPath: string
+}
 
-  async convertDataViews (text: string, path: string): Promise<string> {
-    let replacedText = text
-    const dataViewRegex: RegExp = /```dataview(.+?)```/gsm
-    const dvApi = getAPI()
-    const matches = text.matchAll(dataViewRegex)
-    if (matches === null) return 'no DataView'
-
-    for (const queryBlock of matches) {
-      try {
-        const block = queryBlock[0]
-        const query = queryBlock[1]
-        let markdown = await (dvApi as DataviewApi).tryQueryMarkdown(query, path)
-        const filePathRegex: RegExp = /\[\[[^\|]+\|/gsm
-        const paths = markdown.matchAll(filePathRegex)
-        for (const filepath of paths) {
-          markdown = markdown.replace(filepath[0], '[[')
-          console.log(filepath[0])
-        }
-        replacedText = replacedText.replace(block, markdown)
-      } catch (e) {
-        console.log(new Notice('Unable to render dataview query.'))
-        console.log(e)
-        return queryBlock[0]
-      }
-    }
-    return replacedText
-  }
+const DEFAULT_CONFIG: Config = {
+  vaultPath: '',
+  notePath: '',
+  blogPath: ''
 }
