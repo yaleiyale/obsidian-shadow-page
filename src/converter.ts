@@ -10,7 +10,7 @@ export async function generateAll (obsidianApp: App, path: string): Promise<void
   for (const file of files) {
     await generateOnePage(file)
   }
-  console.log(new Notice('shadow done'))
+  console.log(new Notice('shadow完成'))
 }
 
 async function generateOnePage (currentFile: TFile): Promise<any> {

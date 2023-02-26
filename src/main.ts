@@ -1,7 +1,5 @@
 import { Notice, Plugin } from 'obsidian'
-import { generateAll } from './converter'
-
-import { clearDir, copyNote } from './file-helper'
+import { cloneDir } from './file-helper'
 import { ShadowPageSettingTab } from './settings-tab'
 export default class ShadowPage extends Plugin {
   config!: Config
@@ -11,15 +9,13 @@ export default class ShadowPage extends Plugin {
     this.addSettingTab(new ShadowPageSettingTab(this.app, this))
     // Execute Build
     this.addCommand({
-      id: 'generate-shadow-page',
-      name: 'generate shadow page',
-      callback: async () => {
+      id: 'shadow-page',
+      name: 'shadow page',
+      callback: () => {
         if (this.config.vaultPath === '' || this.config.notePath === '' || this.config.blogPath === '') {
           console.log(new Notice('参数未初始化'))
         } else {
-          clearDir(this.config.vaultPath + this.config.blogPath)
-          copyNote(this.config.vaultPath + this.config.notePath, this.config.vaultPath + this.config.blogPath, [])
-          await generateAll(this.app, this.config.blogPath)
+          cloneDir(this.config.vaultPath, this.config.blogPath, this.config.notePath, this.app)
         }
       },
       hotkeys: []
